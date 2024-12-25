@@ -5,6 +5,7 @@ using Platformer.Gameplay;
 using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
+using System;
 
 namespace Platformer.Mechanics
 {
@@ -42,6 +43,14 @@ namespace Platformer.Mechanics
 
         public Bounds Bounds => collider2d.bounds;
 
+        //for dashing, Alexander, 12/24
+        public float dashSpeed;
+        public float dashTime;
+        Vector2 dashDirection;
+        float dashTimeLeft;
+        int dashState;
+        //0 is can dash, 1 is dashing, 2 is can't dash
+
         void Awake()
         {
             health = GetComponent<Health>();
@@ -49,25 +58,58 @@ namespace Platformer.Mechanics
             collider2d = GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+            dashState = 0;
         }
 
         protected override void Update()
         {
-            if (controlEnabled)
+            //Alexander, 12/24
+            if(1 == dashState)
             {
-                move.x = Input.GetAxis("Horizontal");
-                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
-                    jumpState = JumpState.PrepareToJump;
-                else if (Input.GetButtonUp("Jump"))
+                dashTimeLeft -= Time.deltaTime;
+
+                if(0 >= dashTimeLeft)
                 {
-                    stopJump = true;
-                    Schedule<PlayerStopJump>().player = this;
+                    EndDash();
+                }
+            }
+            else if (controlEnabled)
+            {
+                //Alexander, 12/24
+                if (Input.GetKeyDown(KeyCode.X) && 0 == dashState)
+                {
+                    dashDirection = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+                    dashDirection.Normalize();
+                    body.gravityScale = 0;
+                    dashTimeLeft = dashTime;
+                    dashState = 1;
+                    //Debug.Log("dash state: " + dashState);
+                }
+                else
+                {
+                    move.x = Input.GetAxis("Horizontal");
+                    if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.C)))
+                        jumpState = JumpState.PrepareToJump;
+                    else if (Input.GetButtonUp("Jump") || Input.GetKeyUp(KeyCode.C))
+                    {
+                        stopJump = true;
+                        Schedule<PlayerStopJump>().player = this;
+                    }
+
+                    //Alexander, 12/24
+                    if (2 == dashState && IsGrounded)
+                    {
+                        spriteRenderer.color = Color.white;
+                        dashState = 0;
+                        //Debug.Log("dash state: " + dashState);
+                    }
                 }
             }
             else
             {
                 move.x = 0;
             }
+
             UpdateJumpState();
             base.Update();
         }
@@ -126,7 +168,55 @@ namespace Platformer.Mechanics
             animator.SetBool("grounded", IsGrounded);
             animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
 
-            targetVelocity = move * maxSpeed;
+            //Alexander, 12/24
+            if (1 == dashState)
+            {
+                targetVelocity = dashSpeed * dashDirection;
+                useFriction = false;
+                return;
+            }
+
+            useFriction = 0 == move.x;
+
+            if(0 < move.x * body.linearVelocity.x)
+            {
+                targetVelocity = move * Math.Max(maxSpeed, Math.Abs(body.linearVelocity.x));
+            }
+            else
+            {
+                targetVelocity = move * maxSpeed;
+            }
+            //Debug.Log(move + " " + maxSpeed + " " + targetVelocity);
+        }
+
+        //Alexander, 12/24
+        public void EndDash()
+        {
+            if(1 != dashState)
+            {
+                return;
+            }
+            
+            if (0 <= dashDirection.y)
+            {
+                //Debug.Log("resetting velocity");
+                resetVelocity = true;
+            }
+            /*else
+            {
+                Debug.Log("not resetting velocity");
+            }*/
+
+            dashState = 2;
+            //Debug.Log("dash state: " + dashState);
+            dashDirection = new Vector2(0, 0);
+            body.gravityScale = 1;
+            spriteRenderer.color = new Color(118f / 255f, 236f / 255f, 1f, 1f);
+        }
+
+        public override void Collision()
+        {
+            EndDash();
         }
 
         public enum JumpState

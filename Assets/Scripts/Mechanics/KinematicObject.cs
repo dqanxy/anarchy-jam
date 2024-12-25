@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 namespace Platformer.Mechanics
 {
@@ -39,6 +40,13 @@ namespace Platformer.Mechanics
         protected const float minMoveDistance = 0.001f;
         protected const float shellRadius = 0.01f;
 
+        //Alexander, 12/24
+        //determines how much speed decays each second, higher number is faster decay
+        public float friction = 8;
+        //set this to true to reset velocity to (0, 0) on next physics update
+        protected bool resetVelocity;
+        //set this to true to decay velocity on each update
+        protected bool useFriction;
 
         /// <summary>
         /// Bounce the object's vertical velocity.
@@ -90,7 +98,13 @@ namespace Platformer.Mechanics
 
         protected virtual void Update()
         {
-            targetVelocity = Vector2.zero;
+            //how can I build up speed for 12 hours if I just leave this line here? Alexander, 12/24
+            //targetVelocity = Vector2.zero;
+            if(0 == Input.GetAxis("Horizontal"))
+            {
+
+            }
+
             ComputeVelocity();
         }
 
@@ -99,13 +113,37 @@ namespace Platformer.Mechanics
 
         }
 
+        //Alexander, 12/24
+        //used in PlayerCollider to interrupt dashes
+        public virtual void Collision() { }
+
         protected virtual void FixedUpdate()
         {
+            //Debug.Log("velocity: " + body.linearVelocity);
             //if already falling, fall faster than the jump speed, otherwise use normal gravity.
             if (velocity.y < 0)
                 velocity += gravityModifier * Physics2D.gravity * Time.deltaTime;
             else
                 velocity += Physics2D.gravity * Time.deltaTime;
+
+            //Alexander, 12/24
+            if (resetVelocity)
+            {
+                //Debug.Log("resetting velocity");
+                velocity = Vector2.zero;
+                targetVelocity = Vector2.zero;
+                body.linearVelocity = Vector2.zero;
+                resetVelocity = false;
+            }
+            else if(useFriction)
+            {
+                targetVelocity.x = body.linearVelocity.x * (float)Math.Pow(friction, -Time.deltaTime);
+            }
+
+            if (0 != targetVelocity.y)
+            {
+                velocity.y = targetVelocity.y;
+            }
 
             velocity.x = targetVelocity.x;
 
@@ -133,6 +171,13 @@ namespace Platformer.Mechanics
             {
                 //check if we hit anything in current direction of travel
                 var count = body.Cast(move, contactFilter, hitBuffer, distance + shellRadius);
+
+                if(0 < count)
+                {
+                    Debug.Log(count);
+                    Collision();
+                }
+
                 for (var i = 0; i < count; i++)
                 {
                     var currentNormal = hitBuffer[i].normal;
