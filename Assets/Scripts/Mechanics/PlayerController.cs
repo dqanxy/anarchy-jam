@@ -114,11 +114,6 @@ namespace Platformer.Mechanics
                     {
                         stopJump = true;
                         Schedule<PlayerStopJump>().player = this;
-
-                        if(1 == dashState)
-                        {
-                            EndDash(true);
-                        }
                     }
 
                     //Alexander, 12/24
@@ -174,6 +169,13 @@ namespace Platformer.Mechanics
             if (jump && IsGrounded)
             {
                 velocity.y = jumpTakeOffSpeed * model.jumpModifier;
+
+                //Alexander, 12/26
+                if (1 == dashState)
+                {
+                    EndDash(true);
+                }
+
                 jump = false;
             }
             else if (stopJump)
@@ -230,12 +232,10 @@ namespace Platformer.Mechanics
             {
                 return;
             }
-
-            Debug.Log("ending dash, " + jumped);
-            
+            //Debug.Log("ending dash, " + jumped);
             if (0 <= dashDirection.y && !jumped)
             {
-                Debug.Log("resetting velocity");
+                //Debug.Log("resetting velocity");
                 resetVelocity = true;
             }
             /*else
