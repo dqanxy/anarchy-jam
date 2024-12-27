@@ -49,6 +49,7 @@ namespace Platformer.Mechanics
         public float dashTime;
         Vector2 dashDirection;
         float dashTimeLeft;
+        //0 is can dash, 1 is dashing, 2 and 3 are can't dash
         int dashState;
 
         void Awake()
@@ -115,14 +116,6 @@ namespace Platformer.Mechanics
                         stopJump = true;
                         Schedule<PlayerStopJump>().player = this;
                     }
-
-                    //Alexander, 12/24
-                    if (2 == dashState && IsGrounded)
-                    {
-                        spriteRenderer.color = Color.white;
-                        dashState = 0;
-                        //Debug.Log("dash state: " + dashState);
-                    }
                 }
             }
             else
@@ -132,6 +125,24 @@ namespace Platformer.Mechanics
 
             UpdateJumpState();
             base.Update();
+        }
+
+        //Alexander, 12/26
+        protected override void FixedUpdate()
+        {
+            if (3 == dashState && IsGrounded)
+            {
+                spriteRenderer.color = Color.white;
+                dashState = 0;
+                //Debug.Log("dash state: " + dashState);
+            }
+
+            if (2 == dashState && IsGrounded)
+            {
+                dashState = 3;
+            }
+
+            base.FixedUpdate();
         }
 
         void UpdateJumpState()
