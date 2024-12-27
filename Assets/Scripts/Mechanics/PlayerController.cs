@@ -50,7 +50,6 @@ namespace Platformer.Mechanics
         Vector2 dashDirection;
         float dashTimeLeft;
         int dashState;
-        //0 is can dash, 1 is dashing, 2 is can't dash
 
         void Awake()
         {
@@ -71,32 +70,55 @@ namespace Platformer.Mechanics
 
                 if(0 >= dashTimeLeft)
                 {
-                    EndDash();
+                    EndDash(false);
                 }
             }
-            else if (controlEnabled)
+            
+            if (controlEnabled)
             {
                 //Alexander, 12/24
                 if (Input.GetKeyDown(KeyCode.X) && 0 == dashState)
                 {
                     dashDirection = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+
+                    if(Vector2.zero == dashDirection)
+                    {
+                        if (spriteRenderer.flipX)
+                        {
+                            dashDirection = new Vector2(-1, 0);
+                        }
+                        else
+                        {
+                            dashDirection = new Vector2(1, 0);
+                        }
+                    }
+
                     dashDirection.Normalize();
                     body.gravityScale = 0;
                     dashTimeLeft = dashTime;
                     dashState = 1;
                     audioSource.clip = dashAudio;
                     audioSource.Play();
-                    Debug.Log("attempted to play audio");
+                    //Debug.Log("attempted to play audio");
                 }
                 else
                 {
-                    move.x = Input.GetAxis("Horizontal");
+                    if(1 != dashState)
+                    {
+                        move.x = Input.GetAxis("Horizontal");
+                    }
+
                     if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.C)))
                         jumpState = JumpState.PrepareToJump;
                     else if (Input.GetButtonUp("Jump") || Input.GetKeyUp(KeyCode.C))
                     {
                         stopJump = true;
                         Schedule<PlayerStopJump>().player = this;
+
+                        if(1 == dashState)
+                        {
+                            EndDash(true);
+                        }
                     }
 
                     //Alexander, 12/24
@@ -201,16 +223,19 @@ namespace Platformer.Mechanics
         }
 
         //Alexander, 12/24
-        public void EndDash()
+        //set jumped to true if the dash was ended by a jump
+        public void EndDash(bool jumped)
         {
             if(1 != dashState)
             {
                 return;
             }
+
+            Debug.Log("ending dash, " + jumped);
             
-            if (0 <= dashDirection.y)
+            if (0 <= dashDirection.y && !jumped)
             {
-                //Debug.Log("resetting velocity");
+                Debug.Log("resetting velocity");
                 resetVelocity = true;
             }
             /*else
@@ -225,9 +250,10 @@ namespace Platformer.Mechanics
             spriteRenderer.color = new Color(118f / 255f, 236f / 255f, 1f, 1f);
         }
 
+        //dashing into the ground should instantly interrupt the dash, but for some reason the game works more as intended when I comment out that line.
         public override void Collision()
         {
-            //EndDash();
+            //EndDash(false);
         }
 
         public enum JumpState
