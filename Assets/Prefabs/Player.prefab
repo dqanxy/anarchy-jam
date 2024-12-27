@@ -51,12 +51,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minGroundNormalY: 0.9
-  gravityModifier: 1
+  gravityModifier: 0.7
   velocity: {x: 0, y: 0}
   friction: 4
-  jumpAudio: {fileID: 8300000, guid: 67975c08d56ceb147bad38572d805aa8, type: 3}
-  respawnAudio: {fileID: 8300000, guid: e18959d46b63f3c4c8cc020a433cf848, type: 3}
-  ouchAudio: {fileID: 8300000, guid: 6c05149e5a2fba64ba172e25a61074b7, type: 3}
+  jumpAudio: {fileID: 8300000, guid: 4d2e7e4ce0f68344fb8f579edc1af029, type: 3}
+  respawnAudio: {fileID: 8300000, guid: 30f4c6247b42e334a8dfda719ce4ce76, type: 3}
+  ouchAudio: {fileID: 8300000, guid: aafc69ebe98596c439c255813bf07854, type: 3}
   maxSpeed: 3
   jumpTakeOffSpeed: 7
   jumpState: 0
@@ -64,6 +64,7 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   health: {fileID: 0}
   controlEnabled: 1
+  dashAudio: {fileID: 8300000, guid: 7e271e35dc2c0df428d6c853715c839b, type: 3}
   dashSpeed: 6
   dashTime: 0.25
 --- !u!212 &212064061491315838

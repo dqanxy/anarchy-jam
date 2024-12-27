@@ -44,6 +44,7 @@ namespace Platformer.Mechanics
         public Bounds Bounds => collider2d.bounds;
 
         //for dashing, Alexander, 12/24
+        public AudioClip dashAudio;
         public float dashSpeed;
         public float dashTime;
         Vector2 dashDirection;
@@ -83,7 +84,9 @@ namespace Platformer.Mechanics
                     body.gravityScale = 0;
                     dashTimeLeft = dashTime;
                     dashState = 1;
-                    //Debug.Log("dash state: " + dashState);
+                    audioSource.clip = dashAudio;
+                    audioSource.Play();
+                    Debug.Log("attempted to play audio");
                 }
                 else
                 {
@@ -165,8 +168,16 @@ namespace Platformer.Mechanics
             else if (move.x < -0.01f)
                 spriteRenderer.flipX = true;
 
+            //Alexander, 12/25
+            float speedFraction = Mathf.Abs(velocity.x) / maxSpeed;
+
+            if(1f / 24f > speedFraction)
+            {
+                speedFraction = 0f;
+            }
+
             animator.SetBool("grounded", IsGrounded);
-            animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
+            animator.SetFloat("velocityX", speedFraction);
 
             //Alexander, 12/24
             if (1 == dashState)
@@ -178,9 +189,9 @@ namespace Platformer.Mechanics
 
             useFriction = 0 == move.x;
 
-            if(0 < move.x * body.linearVelocity.x)
+            if(0 < move.x * velocity.x)
             {
-                targetVelocity = move * Math.Max(maxSpeed, Math.Abs(body.linearVelocity.x));
+                targetVelocity = move * Math.Max(maxSpeed, Math.Abs(velocity.x));
             }
             else
             {
@@ -216,7 +227,7 @@ namespace Platformer.Mechanics
 
         public override void Collision()
         {
-            EndDash();
+            //EndDash();
         }
 
         public enum JumpState

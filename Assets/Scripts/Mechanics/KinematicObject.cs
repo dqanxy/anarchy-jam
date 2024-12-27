@@ -114,7 +114,7 @@ namespace Platformer.Mechanics
         }
 
         //Alexander, 12/24
-        //used in PlayerCollider to interrupt dashes
+        //used in PlayerController to interrupt dashes
         public virtual void Collision() { }
 
         protected virtual void FixedUpdate()
@@ -137,7 +137,7 @@ namespace Platformer.Mechanics
             }
             else if(useFriction)
             {
-                targetVelocity.x = body.linearVelocity.x * (float)Math.Pow(friction, -Time.deltaTime);
+                targetVelocity.x = velocity.x * (float)Math.Pow(friction, -Time.deltaTime);
             }
 
             if (0 != targetVelocity.y)
@@ -171,10 +171,10 @@ namespace Platformer.Mechanics
             {
                 //check if we hit anything in current direction of travel
                 var count = body.Cast(move, contactFilter, hitBuffer, distance + shellRadius);
+                //Debug.Log(count);
 
-                if(0 < count)
+                if (0 < count)
                 {
-                    Debug.Log(count);
                     Collision();
                 }
 
@@ -197,6 +197,8 @@ namespace Platformer.Mechanics
                     {
                         //how much of our velocity aligns with surface normal?
                         var projection = Vector2.Dot(velocity, currentNormal);
+                        //Debug.Log(velocity + " " + currentNormal);
+
                         if (projection < 0)
                         {
                             //slower velocity if moving against the normal (up a hill).
@@ -215,6 +217,7 @@ namespace Platformer.Mechanics
                 }
             }
             body.position = body.position + move.normalized * distance;
+            //Debug.Log(move.normalized * distance / Time.fixedDeltaTime);
         }
 
     }
